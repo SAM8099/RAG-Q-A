@@ -1,0 +1,15 @@
+numpy
+pandas
+transformers
+torchvision
+scikit-learn
+fastapi
+langchain-community
+langchain-text-splitters
+langchain_core
+langchain-perplexity
+python-multipart
+langchain-groq
+langchain
+langchain-ollama
+langchain-chroma
