@@ -6,13 +6,14 @@ load_dotenv()
 NEWSAPI_KEY = os.getenv("NEWSAPI_KEY")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
-# PostgreSQL
-DATABASE_URL = os.getenv("DATABASE_URL")  # e.g. postgresql://user:pass@host:5432/dbname
+# Upgraded from BGE-small to BGE-M3 for better multilingual and retrieval quality
+EMBEDDING_MODEL = "BAAI/bge-m3"
 
-EMBEDDING_MODEL = "BAAI/bge-small-en-v1.5"
-LLM_MODEL = "llama3-70b-8192"
+# BGE Reranker — cross-encoder, more accurate than embedding similarity alone
+RERANK_MODEL = "BAAI/bge-reranker-base"
+
+LLM_MODEL = "llama-3.3-70b-versatile"
 FAISS_INDEX_PATH = "data/faiss_index"
-HISTORY_FILE = "data/history.json"
 
 TOPICS = {
     "General": "",
@@ -25,7 +26,7 @@ TOPICS = {
 }
 
 DIFFICULTY_PROMPTS = {
-    "Easy": "Generate 5 simple, factual current affairs questions suitable for beginners. Keep questions short and answers straightforward.",
-    "Medium": "Generate 5 moderate-difficulty current affairs questions that require some background knowledge. Include context-based reasoning questions.",
-    "Hard": "Generate 5 challenging current affairs questions that require deep understanding and analytical thinking. Include inference-based questions.",
+    "Easy": "Generate simple, factual questions suitable for beginners. Keep questions short and answers straightforward.",
+    "Medium": "Generate moderate-difficulty questions that require some background knowledge. Include context-based reasoning.",
+    "Hard": "Generate challenging questions that require deep understanding and analytical thinking. Include inference-based questions.",
 }

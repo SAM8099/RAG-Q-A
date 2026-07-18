@@ -1,18 +1,21 @@
+from llama_index.core.schema import TextNode
 
-class NewsFetcher:
 
-    @staticmethod
-    def fetch_news(topic: str, num_articles: int = 5) -> list[dict]:
-        """
-        Simulate fetching news articles for a given topic.
-        Returns a list of article dicts with 'source', 'title', and 'description'.
-        """
-        # Simulated articles
-        return [
-            {
-                "source": f"Source {i+1}",
-                "title": f"{topic.capitalize()} News Article {i+1}",
-                "description": f"This is a description of {topic} news article {i+1}.",
-            }
-            for i in range(num_articles)
-        ]
+def format_articles_to_nodes(articles: list[dict]) -> list[TextNode]:
+    """
+    Convert articles into LlamaIndex TextNodes with metadata.
+    Metadata (source, title, url) is preserved through chunking
+    and used later for source attribution in responses.
+    """
+    return [
+        TextNode(
+            text=f"Title: {a['title']}\nDescription: {a['description']}",
+            metadata={
+                "source": a["source"],
+                "title": a["title"],
+                "url": a["url"],
+            },
+        )
+        for a in articles
+        if a["title"] and a["description"]
+    ]

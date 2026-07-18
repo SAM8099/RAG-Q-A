@@ -1,5 +1,4 @@
 from langchain.schema import HumanMessage, SystemMessage
-from langchain.docstore.document import Document
 from src.modules.config import DIFFICULTY_PROMPTS
 from src.utils.singleton import Singleton
 from src.services.llm_service import LLMService
@@ -8,38 +7,48 @@ from src.services.llm_service import LLMService
 class GeneratorService(metaclass=Singleton):
     """
     Singleton service for generating and parsing Q&A questions.
-    Uses LLMService internally — no direct LLM initialization here.
     """
 
-    def generate_questions(self, docs: list[Document], difficulty: str, topic: str) -> str:
+    def generate_questions(
+        self,
+        chunks: list[str],
+        difficulty: str,
+        topic: str,
+        sources: list[str] | None = None,
+    ) -> str:
         """
-        Generate current affairs questions from retrieved chunks.
+        Generate questions from retrieved chunks.
+        Sources injected into prompt so LLM can attribute each answer.
         """
         llm = LLMService().get_llm()
-        context = "\n\n".join([doc.page_content for doc in docs])
+        context = "\n\n".join(chunks)
         difficulty_instruction = DIFFICULTY_PROMPTS.get(difficulty, DIFFICULTY_PROMPTS["Medium"])
+        source_line = f"Available sources: {', '.join(sources)}" if sources else ""
 
         system_prompt = """You are a current affairs quiz expert.
-            Generate clear, factual quiz questions strictly based on the provided news context.
-            Never add facts not present in the context.
-            Format your response exactly as:
+Generate clear, factual quiz questions strictly based on the provided news context.
+Never add facts not present in the context.
+Format your response exactly as:
 
-            Q1. [Question]
-            A1. [Answer]
+Q1. [Question]
+A1. [Answer]
+Source: [Source name from available sources]
 
-            Q2. [Question]
-            A2. [Answer]
+Q2. [Question]
+A2. [Answer]
+Source: [Source name from available sources]
 
-            ...and so on."""
+...and so on."""
 
         human_prompt = f"""Topic: {topic or 'General'}
-            Difficulty: {difficulty}
-            Instruction: {difficulty_instruction}
+Difficulty: {difficulty}
+Instruction: {difficulty_instruction}
+{source_line}
 
-            News Context:
-            {context}
+News Context:
+{context}
 
-            Generate the questions now."""
+Generate the questions now."""
 
         try:
             response = llm.invoke([
@@ -52,11 +61,12 @@ class GeneratorService(metaclass=Singleton):
 
     def parse_questions(self, raw_output: str) -> list[dict]:
         """
-        Parse LLM output into structured list of Q&A dicts.
+        Parse LLM output into structured Q&A dicts with source attribution.
         """
         pairs = []
         current_q = None
         current_a = None
+        current_source = None
 
         for line in raw_output.strip().split("\n"):
             line = line.strip()
@@ -64,13 +74,24 @@ class GeneratorService(metaclass=Singleton):
                 continue
             if line.startswith("Q") and "." in line:
                 if current_q and current_a:
-                    pairs.append({"question": current_q, "answer": current_a})
+                    pairs.append({
+                        "question": current_q,
+                        "answer": current_a,
+                        "source": current_source or "Unknown",
+                    })
                 current_q = line.split(".", 1)[-1].strip()
                 current_a = None
+                current_source = None
             elif line.startswith("A") and "." in line:
                 current_a = line.split(".", 1)[-1].strip()
+            elif line.startswith("Source:"):
+                current_source = line.split(":", 1)[-1].strip()
 
         if current_q and current_a:
-            pairs.append({"question": current_q, "answer": current_a})
+            pairs.append({
+                "question": current_q,
+                "answer": current_a,
+                "source": current_source or "Unknown",
+            })
 
         return pairs
