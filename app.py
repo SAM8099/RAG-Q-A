@@ -17,6 +17,7 @@ async def startup():
 @app.get("/", include_in_schema=False)
 def root():
     return RedirectResponse(url="/docs")
+
 @app.get("/health", tags=["Health"])
 def health():
     return {"status": "ok"}
