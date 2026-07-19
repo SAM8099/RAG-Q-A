@@ -3,7 +3,7 @@ from src.responses.news import QuizResponse, QAPair
 from src.services.news_service import NewsService
 from src.services.generator_service import GeneratorService
 from src.modules.news_fetcher import format_articles_to_nodes
-from src.modules.rag import chunk_text, VectorIndexManager, retrieve_relevant_chunks
+from src.modules.rag import chunk_text, VectorIndexManager, Retriever
 
 
 class QuestionGenerator:
@@ -32,7 +32,7 @@ class QuestionGenerator:
             index = VectorIndexManager.build_vector_index(chunked_nodes, topic=request.category)
 
         query = f"current affairs {request.category} news events"
-        chunks, sources = retrieve_relevant_chunks(index, query, top_k=5)
+        chunks, sources = Retriever.retrieve_relevant_chunks(index, query, top_k=5)
 
         try:
             raw_output = GeneratorService().generate_questions(
