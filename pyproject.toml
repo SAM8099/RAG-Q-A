@@ -33,6 +33,7 @@ dependencies = [
     "ruff>=0.12.1",
     "scikit-learn>=1.7.0",
     "sentence-transformers>=3.0.0",
+    "sqlalchemy>=1.4.54",
     "streamlit>=1.40.0",
     "torchvision>=0.22.1",
     "transformers>=4.53.0",

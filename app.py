@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 from src.api.generate_questions import questions_router
 from src.modules.rag import configure_settings
+from src.utils.config import configure_app
 
 app = FastAPI(
     title="Current Affairs Q&A Generator",
@@ -12,7 +13,7 @@ app = FastAPI(
 
 @app.on_event("startup")
 async def startup():
-    configure_settings()
+    configure_app()
 
 @app.get("/", include_in_schema=False)
 def root():

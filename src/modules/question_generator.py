@@ -1,9 +1,13 @@
 from src.requests.quiz import QuizRequest
+from src.requests.generation_records import GenerationRecordRequest
 from src.responses.news import QuizResponse, QAPair
 from src.services.news_service import NewsService
 from src.services.generator_service import GeneratorService
 from src.modules.news_fetcher import format_articles_to_nodes
 from src.modules.rag import chunk_text, VectorIndexManager, Retriever
+from src.repositories.records import RecordRepository
+from src.modules.records import GenerationRecord
+from src.modules.config import LLM_MODEL, CHUNKING_STRATEGY
 
 
 class QuestionGenerator:
@@ -47,6 +51,25 @@ class QuestionGenerator:
         questions = GeneratorService().parse_questions(raw_output)
         if not questions:
             raise RuntimeError("Failed to parse generated questions. Please try again.")
+
+        try:
+            
+            repo = RecordRepository()
+            record_request = GenerationRecordRequest(
+                category=request.category,
+                difficulty=request.difficulty,
+                num_articles=len(articles),
+                num_questions=request.num_questions,
+                chunking_strategy=CHUNKING_STRATEGY,
+                model_used=LLM_MODEL,
+                questions_data=questions
+            )
+            record = GenerationRecord.from_module(record_request)
+            repo.add_record(record)
+            
+        except Exception as db_err:
+            import logging
+            logging.error(f"Failed to log run to database: {db_err}")
 
         return QuizResponse(
             topic=request.category,

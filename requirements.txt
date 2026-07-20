@@ -15,3 +15,4 @@ llama-index-embeddings-huggingface==0.3.1
 llama-index-postprocessor-flag-embedding-reranker==0.2.0
 flagembedding==1.2.11
 llama-index-retrievers-bm25==0.4.0
+sqlalchemy
